@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:,">
+<title>Hiring Day AAC · Fase 2</title>
+<style>
+:root{
+  --bg:#f6f6f4; --panel:#ffffff; --ink:#1d1d1b; --ink-2:#4a4a46; --muted:#8a8a84; --line:#e3e2dd; --line-2:#d2d1cb;
+  --accent:#1f4e79; --accent-soft:#e8eef5; --warn:#b45309; --warn-soft:#fdf3e4; --danger:#a12d2d; --ok:#2f6b3a;
+  --radius:8px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none !important}
+
+/* ---------- Botones ---------- */
+.btn{border:1px solid var(--line-2);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:6px;font-weight:500}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:#e4c4c4}
+.btn.danger:hover{background:#fbf1f1;border-color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;padding:2px 4px;color:var(--muted);font-size:12px}
+.link:hover{color:var(--ink-2);text-decoration:underline}
+.icon{background:none;border:0;color:var(--muted);width:24px;height:24px;border-radius:4px;line-height:1;font-size:14px;padding:0}
+.icon:hover{background:#efeee9;color:var(--ink)}
+.icon:disabled{visibility:hidden}
+
+/* ---------- Wizard ---------- */
+#wizard{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:32px 36px;width:100%;max-width:440px}
+.eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.card h1{font-size:22px;margin:0 0 4px}
+.card .sub{color:var(--ink-2);margin:0 0 24px}
+.field{margin-bottom:16px}
+.field label{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+.field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line-2);border-radius:6px;background:#fff}
+.field input:focus,.field select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.field .help{font-size:12px;color:var(--muted);margin-top:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.err{color:var(--danger);font-size:13px;min-height:20px;margin:0 0 8px}
+
+/* ---------- Sesión ---------- */
+#session{height:100%;display:flex;flex-direction:column}
+.topbar{flex:0 0 auto;display:flex;align-items:center;gap:20px;padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.who{min-width:180px}
+.who .name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.who .meta{font-size:12px;color:var(--muted)}
+.timer{flex:1;display:flex;align-items:center;gap:18px;min-width:0}
+.clock{font-variant-numeric:tabular-nums;font-size:26px;font-weight:600;letter-spacing:.01em;min-width:92px;text-align:right}
+.clock.warn{color:var(--warn)}
+.clock.over{color:var(--danger)}
+.blocks{flex:1;display:flex;gap:6px;min-width:0}
+.block{min-width:0}
+.block .lbl{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.block .lbl b{font-weight:600}
+.block.current .lbl{color:var(--ink)}
+.block.current.warn .lbl{color:var(--warn)}
+.bar{height:6px;background:#ecebe6;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .5s linear}
+.block.done .bar i{background:#9fb3c8}
+.block.warn .bar i{background:var(--warn)}
+.status{font-size:12px;color:var(--muted);white-space:nowrap;text-align:right;min-width:120px}
+.status .paused{color:var(--warn);font-weight:600}
+
+.main{flex:1;display:flex;min-height:0}
+.pane{min-height:0;overflow-y:auto}
+.left{flex:0 0 41%;max-width:620px;background:#fbfbf9;border-right:1px solid var(--line);padding:24px 28px 48px}
+.right{flex:1;padding:24px 32px 64px}
+.main.collapsed .left{display:none}
+.pane-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pane-head .tag{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+
+/* Documento de análisis (solo lectura) */
+.doc h1{font-size:19px;line-height:1.3;margin:0 0 4px}
+.doc .by{font-size:12px;color:var(--muted);margin:0 0 20px;font-style:italic}
+.doc h2{font-size:14px;margin:22px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.doc table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 4px}
+.doc th,.doc td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.doc th{background:#f1f0ec;font-weight:600}
+.doc td:first-child{white-space:nowrap}
+.doc table.kv td:first-child{font-weight:600;width:34%}
+.doc ol{padding-left:22px;margin:4px 0}
+.doc li{margin:0 0 6px}
+.doc p{margin:6px 0}
+
+/* Plantilla editable */
+.tpl{max-width:880px}
+.worker{margin-bottom:28px}
+.worker-head{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.worker-head h2{font-size:16px;margin:0}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 14px;margin-bottom:12px}
+.sec-head{display:flex;align-items:baseline;gap:10px}
+.sec-head .n{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:1px 7px}
+.sec-head h3{font-size:14.5px;margin:0}
+.hint{color:var(--muted);font-size:12.5px;margin:2px 0 10px}
+textarea.f{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 9px;resize:none;overflow:hidden;min-height:36px;line-height:1.45;background:#fff;display:block}
+textarea.f:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.f::placeholder{color:#b3b2ab}
+.sub-label{font-size:12px;font-weight:600;color:var(--ink-2);margin:0 0 4px}
+.stack > * + *{margin-top:10px}
+
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps li{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+ol.steps li .num{flex:0 0 26px;text-align:right;padding-top:8px;font-variant-numeric:tabular-nums;color:var(--ink-2);font-weight:600;font-size:13px}
+ol.steps li textarea{flex:1}
+.tools{display:flex;gap:2px;padding-top:6px;opacity:.25;transition:opacity .15s}
+ol.steps li:hover .tools, ol.steps li:focus-within .tools, table.grid tr:hover .tools, table.grid tr:focus-within .tools{opacity:1}
+
+table.grid{width:100%;border-collapse:separate;border-spacing:0 6px;margin-top:-6px}
+table.grid th{font-size:12px;font-weight:600;color:var(--ink-2);text-align:left;padding:0 4px 0 0}
+table.grid td{vertical-align:top;padding:0 6px 0 0}
+table.grid td.t{width:28px;padding:0}
+.add{margin-top:6px;background:none;border:1px dashed var(--line-2);border-radius:6px;color:var(--ink-2);font-size:12.5px;padding:5px 12px}
+.add:hover{border-color:var(--accent);color:var(--accent)}
+.foot{display:flex;justify-content:flex-end;margin-top:-4px}
+
+/* ---------- Cierre ---------- */
+#closing{min-height:100%;padding:32px 24px}
+.closing-wrap{max-width:900px;margin:0 auto}
+.closing-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:20px}
+.closing-head h1{font-size:22px;margin:0}
+.closing-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 8px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.summary div{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px}
+.summary dt{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.summary dd{margin:2px 0 0;font-weight:600}
+.preview{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 32px;max-height:56vh;overflow:auto}
+.preview h1{font-size:18px;margin:0 0 6px}
+.preview h2{font-size:15px;margin:22px 0 6px;padding-bottom:3px;border-bottom:2px solid var(--ink)}
+.preview h3{font-size:14px;margin:16px 0 6px}
+.preview p{margin:4px 0;white-space:pre-wrap}
+.preview .meta{color:var(--ink-2);font-size:13px;margin:0}
+.preview .empty{color:var(--muted);font-style:italic}
+.preview table{width:100%;border-collapse:collapse;font-size:13px}
+.preview th,.preview td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top;white-space:pre-wrap}
+.preview th{background:#f1f0ec}
+.note{font-size:12px;color:var(--muted)}
+.done-mark{color:var(--ok);font-size:12px;margin-left:6px}
+
+/* ---------- Modal / toast ---------- */
+.overlay{position:fixed;inset:0;background:rgba(20,20,18,.38);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:var(--panel);border-radius:12px;padding:24px 26px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.modal h2{font-size:17px;margin:0 0 4px}
+.modal p{margin:0 0 16px;color:var(--ink-2)}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.modal .menu{display:flex;flex-direction:column;gap:8px}
+.modal .menu .btn{text-align:left}
+.pin-input{width:100%;font-size:22px;letter-spacing:.4em;text-align:center;padding:8px;border:1px solid var(--line-2);border-radius:6px}
+.pin-input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-weight:500;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:opacity .3s}
+#toast.warn{background:var(--warn)}
+
+@media (max-width:1100px){
+  .left{flex-basis:44%}
+  .right{padding:20px}
+  .who{min-width:0}
+  .clock{font-size:22px;min-width:78px}
+}
+@media print{ body{display:none} }
+</style>
+</head>
+<body>
+
+<!-- ================= 1. Wizard (entrevistador) ================= -->
+<div id="wizard" class="hidden">
+  <form class="card" id="wizard-form" autocomplete="off" novalidate>
+    <p class="eyebrow">Maisa · Hiring Day AAC</p>
+    <h1>Fase 2 · Preparación</h1>
+    <p class="sub">Solo para el entrevistador. Completa los datos antes de dar paso al candidato.</p>
+    <div class="field">
+      <label for="w-name">Nombre del candidato</label>
+      <input id="w-name" maxlength="80" required>
+    </div>
+    <div class="field">
+      <label for="w-turno">Turno</label>
+      <select id="w-turno">
+        <option value="T1">T1</option><option value="T2">T2</option>
+        <option value="T3">T3</option><option value="T4">T4</option>
+      </select>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="w-pin">PIN del entrevistador</label>
+        <input id="w-pin" type="password" inputmode="numeric" maxlength="8" required>
+      </div>
+      <div class="field">
+        <label for="w-pin2">Repite el PIN</label>
+        <input id="w-pin2" type="password" inputmode="numeric" maxlength="8" required>
+      </div>
+    </div>
+    <p class="field help" style="margin-top:-8px">De 4 a 8 dígitos. Se pedirá para pausar, cerrar, descargar y reiniciar.</p>
+    <p class="err" id="w-err"></p>
+    <button class="btn primary" type="submit" style="width:100%">Empezar</button>
+  </form>
+</div>
+
+<!-- ================= 2. Pantalla del candidato ================= -->
+<div id="session" class="hidden">
+  <header class="topbar">
+    <div class="who">
+      <div class="name" id="s-name"></div>
+      <div class="meta" id="s-meta"></div>
+    </div>
+    <div class="timer">
+      <div class="clock" id="clock">15:00</div>
+      <div class="blocks" id="blocks"></div>
+    </div>
+    <div class="status">
+      <div id="save-status">&nbsp;</div>
+      <button class="link" id="btn-panel" type="button">Entrevistador</button>
+    </div>
+  </header>
+  <div class="main" id="main">
+    <aside class="pane left" id="analysis">
+      <div class="pane-head"><span class="tag">Análisis TO-BE · solo lectura</span><button class="link" id="btn-hide" type="button">Ocultar</button></div>
+      <article class="doc">
+        <h1>Análisis TO-BE: Reembolso de gastos · Grupo Ribera</h1>
+        <p class="by">Preparado por: Solution Architect, Maisa AI · Para: AI Automation Consultant</p>
+
+        <h2>1. Contexto</h2>
+        <table class="kv">
+          <tr><td>Cliente</td><td>Grupo Ribera, distribuidora de alimentación (unos 800 empleados)</td></tr>
+          <tr><td>Proceso</td><td>Reembolso de gastos de los empleados</td></tr>
+          <tr><td>Responsable de negocio</td><td>Laura Gómez, Responsable de Administración</td></tr>
+          <tr><td>Objetivo</td><td>Automatizar la revisión y el pago de los gastos que suben los empleados</td></tr>
+        </table>
+
+        <h2>2. Sistemas</h2>
+        <table>
+          <tr><th>Sistema</th><th>Para qué se usa</th></tr>
+          <tr><td>Gastix</td><td>Herramienta de gastos: los empleados suben las solicitudes y los responsables las aprueban o rechazan</td></tr>
+          <tr><td>SAP</td><td>Registro de pagos y ficha del empleado</td></tr>
+          <tr><td>Email</td><td>Comunicación con los empleados y con administración</td></tr>
+        </table>
+
+        <h2>3. Entrada</h2>
+        <p>El empleado sube la solicitud a <strong>Gastix</strong> con estos campos:</p>
+        <table>
+          <tr><th>Campo</th><th>Ejemplo</th></tr>
+          <tr><td>Foto del ticket</td><td>imagen</td></tr>
+          <tr><td>Fecha del gasto</td><td>03/10/2026</td></tr>
+          <tr><td>Importe</td><td>27,40 €</td></tr>
+          <tr><td>Categoría</td><td>Comidas / Hotel / Kilometraje</td></tr>
+          <tr><td>Centro de coste</td><td>CC-104</td></tr>
+        </table>
+
+        <h2>4. Reglas de validación</h2>
+        <table>
+          <tr><th>Regla</th><th>Valor</th></tr>
+          <tr><td>Ticket</td><td>Obligatorio</td></tr>
+          <tr><td>Antigüedad máxima del gasto</td><td>60 días</td></tr>
+          <tr><td>Límite comidas</td><td>30 € al día</td></tr>
+          <tr><td>Límite hotel</td><td>120 € la noche</td></tr>
+          <tr><td>Kilometraje</td><td>0,26 € el km</td></tr>
+        </table>
+
+        <h2>5. Proceso TO-BE</h2>
+        <ol>
+          <li>Se valida la solicitud con las reglas del punto 4.</li>
+          <li>Si falta el ticket, se devuelve al empleado, que tiene <strong>10 días</strong> para subirlo. Si no lo sube, se rechaza.</li>
+          <li>Si supera el límite de su categoría, <strong>no se rechaza</strong>: se escala a Laura, que decide.</li>
+          <li>Si cumple todo, se envía a su <strong>responsable directo</strong> para que la apruebe.</li>
+          <li>El responsable aprueba o rechaza en Gastix.</li>
+          <li>Si la rechaza, se avisa al empleado.</li>
+          <li>Si la aprueba, se registra el pago en <strong>SAP</strong> con el nº de empleado, el importe y la referencia de la solicitud. El IBAN está en la ficha del empleado en SAP.</li>
+          <li>Se paga por transferencia <strong>los viernes</strong>. Lo aprobado después del jueves va al viernes siguiente.</li>
+          <li>Se avisa al empleado con la fecha de pago.</li>
+        </ol>
+
+        <h2>Tu tarea</h2>
+        <p>Convierte este análisis en las <strong>instrucciones del Digital Worker</strong>, en tu documento de trabajo.</p>
+        <table>
+          <tr><th>Tiempo</th><th>Qué haces</th></tr>
+          <tr><td>15 min</td><td>Lees el análisis y preguntas al Solution Architect lo que necesites</td></tr>
+          <tr><td>20 min</td><td>Escribes las instrucciones</td></tr>
+          <tr><td>10 min</td><td>Se las explicas al Solution Architect</td></tr>
+        </table>
+      </article>
+    </aside>
+    <section class="pane right">
+      <div class="pane-head"><span class="tag">Instrucciones del Digital Worker</span><button class="link hidden" id="btn-show" type="button">Mostrar análisis</button></div>
+      <div class="tpl" id="tpl"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= 3. Cierre (entrevistador) ================= -->
+<div id="closing" class="hidden">
+  <div class="closing-wrap">
+    <div class="closing-head">
+      <div>
+        <p class="eyebrow">Cierre · solo entrevistador</p>
+        <h1 id="c-title"></h1>
+      </div>
+      <button class="btn" id="btn-back" type="button">Volver a la sesión</button>
+    </div>
+    <dl class="summary" id="c-summary"></dl>
+    <div class="closing-actions">
+      <button class="btn primary" id="btn-md" type="button">Descargar Markdown</button>
+      <button class="btn primary" id="btn-pdf" type="button">Descargar PDF</button>
+      <span style="flex:1"></span>
+      <button class="btn danger" id="btn-reset" type="button">Reiniciar para el siguiente candidato</button>
+    </div>
+    <p class="note" id="c-note" style="margin:0 0 16px">Los archivos se generan en este navegador; no se envía nada a ningún servidor.</p>
+    <div class="preview" id="c-preview"></div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast" class="hidden"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   Configuración
+   ========================================================= */
+var STORE_KEY = 'maisa-hd-aac-fase2';
+var AUTOSAVE_MS = 3000;
+var BLOCKS = [
+  { id:'lectura',     label:'Lectura y preguntas', min:15 },
+  { id:'escritura',   label:'Escritura',           min:20 },
+  { id:'explicacion', label:'Explicación',         min:10 }
+];
+var WARN_MIN = 5;
+var DOC_TITLE = 'Instrucciones del Digital Worker · Reembolso de gastos · Grupo Ribera';
+
+var SECTIONS = [
+  { n:1, key:'nombre',     title:'Nombre y objetivo',  hint:'Cómo se llama el Digital Worker y qué consigue.', type:'nameobj' },
+  { n:2, key:'cuando',     title:'Cuándo arranca',     hint:'Qué hace que se ponga en marcha.', type:'text', ph:'Arranca cuando…' },
+  { n:3, key:'recibe',     title:'Qué recibe',         hint:'Los datos y documentos con los que trabaja.', type:'text', ph:'Recibe…' },
+  { n:4, key:'pasos',      title:'Pasos',              hint:'Lo que hace, en orden. Un paso por línea.', type:'list', ph:'Describe el paso' },
+  { n:5, key:'decisiones', title:'Decisiones',         hint:'Las reglas que aplica.', type:'table',
+    cols:[ {k:'si', h:'Si…', ph:'Si ocurre…'}, {k:'entonces', h:'Entonces…', ph:'Entonces hace…'} ] },
+  { n:6, key:'sistemas',   title:'Sistemas',           hint:'Con qué sistemas trabaja, qué hace en cada uno y con qué datos.', type:'table',
+    cols:[ {k:'sistema', h:'Sistema', ph:'Sistema'}, {k:'accion', h:'Acción', ph:'Qué hace en él'}, {k:'datos', h:'Datos', ph:'Qué datos usa o escribe'} ] },
+  { n:7, key:'fallos',     title:'Si algo falla',      hint:'Qué puede salir mal y cómo reacciona.', type:'table',
+    cols:[ {k:'que', h:'Qué falla', ph:'Qué falla'}, {k:'hace', h:'Qué hace', ph:'Qué hace el Digital Worker'} ] },
+  { n:8, key:'pruebas',    title:'Cómo lo probarías',  hint:'Casos con los que comprobarías que funciona.', type:'table',
+    cols:[ {k:'caso', h:'Caso', ph:'Caso de prueba'}, {k:'esperado', h:'Resultado esperado', ph:'Qué debería pasar'} ] },
+  { n:9, key:'preguntas',  title:'Preguntas abiertas y supuestos', hint:'Lo que no está claro y lo que das por hecho.', type:'text', ph:'Preguntas y supuestos…' }
+];
+
+function emptyWorker(){
+  var w = { nombre:'', objetivo:'', cuando:'', recibe:'', pasos:[''], preguntas:'' };
+  SECTIONS.forEach(function(s){
+    if (s.type === 'table'){ var r = {}; s.cols.forEach(function(c){ r[c.k] = ''; }); w[s.key] = [r]; }
+  });
+  return w;
+}
+
+/* =========================================================
+   Estado y persistencia (solo localStorage)
+   ========================================================= */
+var state = null;
+var dirty = false;
+var view = 'wizard';
+
+function load(){
+  try { var raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; }
+  catch(e){ return null; }
+}
+function save(){
+  if (!state) return;
+  try {
+    state.savedAt = Date.now();
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    dirty = false;
+    setSaveStatus('Guardado ' + hhmmss(new Date(state.savedAt)));
+  } catch(e){
+    setSaveStatus('No se pudo guardar');
+  }
+}
+function wipe(){
+  try { localStorage.removeItem(STORE_KEY); } catch(e){}
+  state = null; dirty = false;
+}
+function markDirty(){ dirty = true; setSaveStatus('Cambios sin guardar…'); }
+
+setInterval(function(){ if (dirty) save(); }, AUTOSAVE_MS);
+window.addEventListener('beforeunload', function(){ if (dirty) save(); });
+document.addEventListener('visibilitychange', function(){ if (document.hidden && dirty) save(); });
+
+/* =========================================================
+   Utilidades
+   ========================================================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function hhmmss(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+function hhmm(d){ return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function dmy(d){ return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear(); }
+function mmss(ms){ var s = Math.max(0, Math.round(ms/1000)); return pad(Math.floor(s/60)) + ':' + pad(s%60); }
+function show(id){ ['wizard','session','closing'].forEach(function(v){ $(v).classList.toggle('hidden', v !== id); }); view = id; }
+function setSaveStatus(t){ var el = $('save-status'); if (el) el.textContent = t; }
+function slug(s){
+  return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'').toLowerCase() || 'candidato';
+}
+var toastTimer = null;
+function toast(msg, kind){
+  var t = $('toast'); t.textContent = msg; t.className = kind || '';
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.className = 'hidden'; }, kind === 'warn' ? 9000 : 4000);
+}
+
+/* PIN: se guarda solo un hash con sal, nunca el PIN en claro */
+function randomSalt(){
+  var a = new Uint8Array(16); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach(function(_,i){ a[i] = Math.random()*256|0; });
+  return Array.prototype.map.call(a, function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+}
+function hashPin(pin, salt){
+  var data = salt + ':' + pin;
+  if (window.crypto && crypto.subtle && window.isSecureContext !== false){
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(data)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ('0'+b.toString(16)).slice(-2); }).join('');
+    });
+  }
+  // Alternativa sin crypto.subtle (p. ej. contextos no seguros)
+  var h = 0x811c9dc5;
+  for (var r = 0; r < 2000; r++) for (var i = 0; i < data.length; i++){ h ^= data.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return Promise.resolve('fnv' + h.toString(16));
+}
+function checkPin(pin){ return hashPin(pin, state.pinSalt).then(function(h){ return h === state.pinHash; }); }
+
+/* =========================================================
+   Modales
+   ========================================================= */
+function openModal(html, onMount){
+  var root = $('modal-root');
+  root.innerHTML = '<div class="overlay"><div class="modal" role="dialog" aria-modal="true">' + html + '</div></div>';
+  var ov = root.firstChild;
+  function close(){ root.innerHTML = ''; document.removeEventListener('keydown', onKey); }
+  function onKey(e){ if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+  onMount(ov.firstChild, close);
+}
+
+var failed = 0;
+function askPin(title, text){
+  return new Promise(function(resolve){
+    openModal(
+      '<h2>' + esc(title) + '</h2><p>' + esc(text || 'Introduce el PIN del entrevistador.') + '</p>' +
+      '<form id="pin-form" autocomplete="off"><input class="pin-input" id="pin-in" type="password" inputmode="numeric" maxlength="8" aria-label="PIN">' +
+      '<p class="err" id="pin-err"></p><div class="actions"><button type="button" class="btn" id="pin-cancel">Cancelar</button>' +
+      '<button class="btn primary" type="submit">Continuar</button></div></form>',
+      function(m, close){
+        var inp = m.querySelector('#pin-in'); inp.focus();
+        m.querySelector('#pin-cancel').onclick = function(){ close(); resolve(false); };
+        m.querySelector('#pin-form').onsubmit = function(e){
+          e.preventDefault();
+          var v = inp.value.trim();
+          checkPin(v).then(function(ok){
+            if (ok){ failed = 0; close(); resolve(true); return; }
+            failed++;
+            inp.value = ''; m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake');
+            var err = m.querySelector('#pin-err');
+            if (failed >= 3){
+              err.textContent = 'PIN incorrecto. Espera unos segundos.'; inp.disabled = true;
+              setTimeout(function(){ inp.disabled = false; err.textContent = ''; inp.focus(); }, 5000 * (failed - 2));
+            } else { err.textContent = 'PIN incorrecto.'; inp.focus(); }
+          });
+        };
+      });
+  });
+}
+function confirmBox(title, text, okLabel, danger){
+  return new Promise(function(resolve){
+    openModal('<h2>' + esc(title) + '</h2><p>' + esc(text) + '</p><div class="actions"><button class="btn" id="cb-no" type="button">Cancelar</button>' +
+      '<button class="btn ' + (danger ? 'danger' : 'primary') + '" id="cb-yes" type="button">' + esc(okLabel) + '</button></div>',
+      function(m, close){
+        m.querySelector('#cb-no').onclick = function(){ close(); resolve(false); };
+        m.querySelector('#cb-yes').onclick = function(){ close(); resolve(true); };
+        m.querySelector('#cb-yes').focus();
+      });
+  });
+}
+
+/* =========================================================
+   1. Wizard
+   ========================================================= */
+$('wizard-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var name = $('w-name').value.trim(), turno = $('w-turno').value, pin = $('w-pin').value.trim(), pin2 = $('w-pin2').value.trim();
+  var err = $('w-err');
+  if (!name) { err.textContent = 'Falta el nombre del candidato.'; $('w-name').focus(); return; }
+  if (!/^\d{4,8}$/.test(pin)) { err.textContent = 'El PIN debe tener entre 4 y 8 dígitos.'; $('w-pin').focus(); return; }
+  if (pin !== pin2) { err.textContent = 'Los PIN no coinciden.'; $('w-pin2').focus(); return; }
+  err.textContent = '';
+  var salt = randomSalt();
+  hashPin(pin, salt).then(function(h){
+    var now = Date.now();
+    state = {
+      v:1, candidate:name, turno:turno, pinSalt:salt, pinHash:h, createdAt:now,
+      timer:{ start:now, pausedAt:null, pausedTotal:0, skip:0, warned:{}, announced:{} },
+      workers:[ emptyWorker() ], exported:{}
+    };
+    $('wizard-form').reset();
+    save();
+    enterSession();
+  });
+});
+
+/* =========================================================
+   2. Sesión del candidato
+   ========================================================= */
+function enterSession(){
+  show('session');
+  $('s-name').textContent = state.candidate;
+  $('s-meta').textContent = 'Turno ' + state.turno + ' · ' + dmy(new Date(state.createdAt));
+  document.title = 'Fase 2 · ' + state.candidate;
+  buildBlocks();
+  renderTemplate();
+  tick();
+  if (state.savedAt) setSaveStatus('Guardado ' + hhmmss(new Date(state.savedAt)));
+}
+
+$('btn-hide').onclick = function(){ $('main').classList.add('collapsed'); $('btn-show').classList.remove('hidden'); };
+$('btn-show').onclick = function(){ $('main').classList.remove('collapsed'); $('btn-show').classList.add('hidden'); };
+
+/* ---------- Temporizador ---------- */
+var TOTAL_MS = BLOCKS.reduce(function(a,b){ return a + b.min*60000; }, 0);
+
+function elapsed(){
+  var t = state.timer, now = Date.now();
+  var paused = t.pausedAt ? now - t.pausedAt : 0;
+  return Math.max(0, now - t.start - t.pausedTotal - paused + t.skip);
+}
+function phaseAt(ms){
+  var acc = 0;
+  for (var i = 0; i < BLOCKS.length; i++){
+    var len = BLOCKS[i].min*60000;
+    if (ms < acc + len) return { i:i, into:ms-acc, left:acc+len-ms, len:len };
+    acc += len;
+  }
+  return { i:BLOCKS.length, over:ms-acc };
+}
+function buildBlocks(){
+  $('blocks').innerHTML = BLOCKS.map(function(b, i){
+    return '<div class="block" id="blk-' + i + '" style="flex:' + b.min + '"><div class="lbl"><b>' + esc(b.label) + '</b> · ' + b.min + '′</div><div class="bar"><i></i></div></div>';
+  }).join('');
+}
+function tick(){
+  if (view !== 'session' && view !== 'closing') return;
+  if (!state) return;
+  var ms = elapsed(), p = phaseAt(ms), t = state.timer, clock = $('clock');
+  BLOCKS.forEach(function(b, i){
+    var el = $('blk-' + i); if (!el) return;
+    var pct = i < p.i ? 100 : (i === p.i ? (p.into / p.len) * 100 : 0);
+    el.querySelector('i').style.width = pct.toFixed(2) + '%';
+    el.classList.toggle('done', i < p.i);
+    el.classList.toggle('current', i === p.i);
+    el.classList.toggle('warn', i === p.i && p.left <= WARN_MIN*60000);
+  });
+  if (p.i < BLOCKS.length){
+    clock.textContent = mmss(p.left);
+    clock.className = 'clock' + (p.left <= WARN_MIN*60000 ? ' warn' : '');
+    var b = BLOCKS[p.i];
+    if (!t.announced[b.id]){
+      t.announced[b.id] = true;
+      if (p.i > 0) toast('Empieza: ' + b.label + ' (' + b.min + ' min)');
+      markDirty();
+    }
+    if (p.left <= WARN_MIN*60000 && !t.warned[b.id]){
+      t.warned[b.id] = true;
+      toast('Quedan 5 minutos de ' + b.label.toLowerCase(), 'warn');
+      markDirty();
+    }
+  } else {
+    clock.textContent = '+' + mmss(p.over);
+    clock.className = 'clock over';
+    if (!t.announced.fin){ t.announced.fin = true; toast('Tiempo finalizado', 'warn'); markDirty(); }
+  }
+  var sm = $('save-status');
+  if (t.pausedAt && sm && sm.innerHTML.indexOf('paused') < 0) sm.innerHTML = '<span class="paused">En pausa</span>';
+}
+setInterval(tick, 500);
+
+/* ---------- Plantilla editable ---------- */
+function ta(path, value, ph, rows){
+  return '<textarea class="f" rows="' + (rows || 1) + '" data-path="' + path + '" placeholder="' + esc(ph || '') + '">' + esc(value) + '</textarea>';
+}
+function renderTemplate(focusPath){
+  var multi = state.workers.length > 1;
+  var html = state.workers.map(function(w, wi){
+    var p = 'w.' + wi + '.';
+    var out = '<div class="worker" data-w="' + wi + '">';
+    if (multi) out += '<div class="worker-head"><h2>Digital Worker ' + (wi+1) + (w.nombre ? ' · ' + esc(w.nombre) : '') + '</h2>' +
+      '<button class="link" type="button" data-act="del-worker" data-w="' + wi + '">Eliminar bloque</button></div>';
+    SECTIONS.forEach(function(s){
+      out += '<section class="sec"><div class="sec-head"><span class="n">' + s.n + '</span><h3>' + esc(s.title) + '</h3></div><p class="hint">' + esc(s.hint) + '</p>';
+      if (s.type === 'nameobj'){
+        out += '<div class="stack"><div><div class="sub-label">Nombre</div>' + ta(p+'nombre', w.nombre, 'Nombre del Digital Worker') + '</div>' +
+               '<div><div class="sub-label">Objetivo</div>' + ta(p+'objetivo', w.objetivo, 'Qué consigue', 2) + '</div></div>';
+      } else if (s.type === 'text'){
+        out += ta(p+s.key, w[s.key], s.ph, 3);
+      } else if (s.type === 'list'){
+        out += '<ol class="steps">' + w.pasos.map(function(v, i){
+          return '<li><span class="num">' + (i+1) + '.</span>' + ta(p+'pasos.'+i, v, s.ph) +
+            '<span class="tools">' +
+            '<button class="icon" type="button" title="Subir" data-act="up" data-w="' + wi + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+            '<button class="icon" type="button" title="Bajar" data-act="down" data-w="' + wi + '" data-i="' + i + '"' + (i === w.pasos.length-1 ? ' disabled' : '') + '>↓</button>' +
+            '<button class="icon" type="button" title="Quitar paso" data-act="del-step" data-w="' + wi + '" data-i="' + i + '">×</button>' +
+            '</span></li>';
+        }).join('') + '</ol><button class="add" type="button" data-act="add-step" data-w="' + wi + '">+ paso</button>';
+      } else if (s.type === 'table'){
+        out += '<table class="grid"><thead><tr>' + s.cols.map(function(c){ return '<th>' + esc(c.h) + '</th>'; }).join('') + '<th></th></tr></thead><tbody>' +
+          w[s.key].map(function(row, ri){
+            return '<tr>' + s.cols.map(function(c){ return '<td>' + ta(p+s.key+'.'+ri+'.'+c.k, row[c.k], c.ph) + '</td>'; }).join('') +
+              '<td class="t"><span class="tools"><button class="icon" type="button" title="Quitar fila" data-act="del-row" data-w="' + wi + '" data-k="' + s.key + '" data-i="' + ri + '">×</button></span></td></tr>';
+          }).join('') + '</tbody></table><button class="add" type="button" data-act="add-row" data-w="' + wi + '" data-k="' + s.key + '">+ fila</button>';
+      }
+      out += '</section>';
+    });
+    out += '<div class="foot"><button class="link" type="button" data-act="dup-worker" data-w="' + wi + '">Duplicar bloque</button></div></div>';
+    return out;
+  }).join('');
+  var tpl = $('tpl');
+  tpl.innerHTML = html;
+  tpl.querySelectorAll('textarea.f').forEach(autosize);
+  if (focusPath){
+    var el = tpl.querySelector('[data-path="' + focusPath + '"]');
+    if (el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+}
+function autosize(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+window.addEventListener('resize', function(){ if (view === 'session') $('tpl').querySelectorAll('textarea.f').forEach(autosize); });
+
+function setPath(path, value){
+  var parts = path.split('.'), obj = state.workers[+parts[1]];
+  for (var i = 2; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length-1]] = value;
+}
+
+$('tpl').addEventListener('input', function(e){
+  var el = e.target;
+  if (!el.dataset || !el.dataset.path) return;
+  setPath(el.dataset.path, el.value);
+  autosize(el);
+  markDirty();
+});
+
+/* Enter en un paso crea el siguiente; Retroceso en un paso vacío lo elimina */
+$('tpl').addEventListener('keydown', function(e){
+  var el = e.target, path = el.dataset && el.dataset.path;
+  if (!path || path.indexOf('.pasos.') < 0) return;
+  var parts = path.split('.'), wi = +parts[1], i = +parts[3], pasos = state.workers[wi].pasos;
+  if (e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    pasos.splice(i+1, 0, '');
+    markDirty(); renderTemplate('w.' + wi + '.pasos.' + (i+1));
+  } else if (e.key === 'Backspace' && el.value === '' && pasos.length > 1){
+    e.preventDefault();
+    pasos.splice(i, 1);
+    markDirty(); renderTemplate('w.' + wi + '.pasos.' + Math.max(0, i-1));
+  }
+});
+
+$('tpl').addEventListener('click', function(e){
+  var b = e.target.closest('[data-act]'); if (!b) return;
+  var act = b.dataset.act, wi = +b.dataset.w, i = +b.dataset.i, w = state.workers[wi], focus = null;
+  switch (act){
+    case 'add-step': w.pasos.push(''); focus = 'w.'+wi+'.pasos.'+(w.pasos.length-1); break;
+    case 'del-step': w.pasos.splice(i, 1); if (!w.pasos.length) w.pasos.push(''); break;
+    case 'up':   if (i > 0){ var t = w.pasos[i-1]; w.pasos[i-1] = w.pasos[i]; w.pasos[i] = t; } break;
+    case 'down': if (i < w.pasos.length-1){ var t2 = w.pasos[i+1]; w.pasos[i+1] = w.pasos[i]; w.pasos[i] = t2; } break;
+    case 'add-row':
+      var sec = SECTIONS.filter(function(s){ return s.key === b.dataset.k; })[0], r = {};
+      sec.cols.forEach(function(c){ r[c.k] = ''; });
+      w[b.dataset.k].push(r);
+      focus = 'w.'+wi+'.'+b.dataset.k+'.'+(w[b.dataset.k].length-1)+'.'+sec.cols[0].k;
+      break;
+    case 'del-row':
+      var rows = w[b.dataset.k];
+      var hasText = Object.keys(rows[i]).some(function(k){ return rows[i][k].trim(); });
+      var doDel = function(){
+        rows.splice(i, 1);
+        if (!rows.length){ var s2 = SECTIONS.filter(function(s){ return s.key === b.dataset.k; })[0], r2 = {}; s2.cols.forEach(function(c){ r2[c.k] = ''; }); rows.push(r2); }
+        markDirty(); renderTemplate();
+      };
+      if (hasText) confirmBox('Quitar fila', 'La fila tiene contenido. ¿Quitarla?', 'Quitar', true).then(function(ok){ if (ok) doDel(); });
+      else doDel();
+      return;
+    case 'dup-worker':
+      state.workers.splice(wi+1, 0, JSON.parse(JSON.stringify(w)));
+      markDirty(); renderTemplate();
+      var nodes = $('tpl').querySelectorAll('.worker'); if (nodes[wi+1]) nodes[wi+1].scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    case 'del-worker':
+      confirmBox('Eliminar bloque', 'Se borrará el Digital Worker ' + (wi+1) + ' con todo su contenido.', 'Eliminar', true).then(function(ok){
+        if (ok){ state.workers.splice(wi, 1); markDirty(); renderTemplate(); }
+      });
+      return;
+    default: return;
+  }
+  markDirty(); renderTemplate(focus);
+});
+
+/* ---------- Panel del entrevistador ---------- */
+$('btn-panel').onclick = function(){
+  askPin('Entrevistador').then(function(ok){
+    if (!ok) return;
+    var t = state.timer, p = phaseAt(elapsed()), last = p.i >= BLOCKS.length - 1;
+    var nextLabel = p.i < BLOCKS.length - 1 ? 'Pasar a: ' + BLOCKS[p.i+1].label : (p.i === BLOCKS.length - 1 ? 'Terminar el tiempo' : '');
+    openModal('<h2>Entrevistador</h2><p>' + esc(state.candidate) + ' · Turno ' + esc(state.turno) + '</p><div class="menu">' +
+      '<button class="btn" id="m-pause" type="button">' + (t.pausedAt ? 'Reanudar temporizador' : 'Pausar temporizador') + '</button>' +
+      (p.i < BLOCKS.length ? '<button class="btn" id="m-next" type="button">' + esc(nextLabel) + '</button>' : '') +
+      '<button class="btn primary" id="m-close" type="button">Cerrar y descargar entrega</button>' +
+      '<button class="btn" id="m-cancel" type="button">Volver</button></div>',
+      function(m, close){
+        m.querySelector('#m-pause').onclick = function(){
+          if (t.pausedAt){ t.pausedTotal += Date.now() - t.pausedAt; t.pausedAt = null; setSaveStatus('Reanudado'); }
+          else { t.pausedAt = Date.now(); }
+          save(); tick(); close();
+        };
+        var nx = m.querySelector('#m-next');
+        if (nx) nx.onclick = function(){
+          var cur = phaseAt(elapsed());
+          if (cur.i < BLOCKS.length){ t.skip += cur.left; }
+          save(); tick(); close();
+        };
+        m.querySelector('#m-close').onclick = function(){ close(); save(); enterClosing(); };
+        m.querySelector('#m-cancel').onclick = close;
+      });
+  });
+};
+
+/* =========================================================
+   3. Cierre
+   ========================================================= */
+function enterClosing(){
+  show('closing');
+  window.scrollTo(0, 0);
+  var created = new Date(state.createdAt);
+  $('c-title').textContent = state.candidate;
+  var w = state.workers;
+  var steps = w.reduce(function(a, x){ return a + x.pasos.filter(function(s){ return s.trim(); }).length; }, 0);
+  $('c-summary').innerHTML =
+    '<div><dt>Turno</dt><dd>' + esc(state.turno) + '</dd></div>' +
+    '<div><dt>Fecha</dt><dd>' + dmy(created) + ' · ' + hhmm(created) + '</dd></div>' +
+    '<div><dt>Tiempo transcurrido</dt><dd>' + mmss(elapsed()) + '</dd></div>' +
+    '<div><dt>Contenido</dt><dd>' + w.length + ' DW · ' + steps + ' pasos</dd></div>';
+  $('c-preview').innerHTML = toHtml(buildDoc());
+  updateExportMarks();
+}
+function updateExportMarks(){
+  $('btn-md').innerHTML = 'Descargar Markdown' + (state.exported.md ? ' <span class="done-mark" style="color:#fff">✓</span>' : '');
+  $('btn-pdf').innerHTML = 'Descargar PDF' + (state.exported.pdf ? ' <span class="done-mark" style="color:#fff">✓</span>' : '');
+}
+$('btn-back').onclick = function(){ enterSession(); };
+function fileBase(){ return slug(state.candidate) + '_' + ymd(new Date(state.createdAt)); }
+function download(blob, name){
+  var url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+}
+$('btn-md').onclick = function(){
+  download(new Blob([toMarkdown(buildDoc())], {type:'text/markdown;charset=utf-8'}), fileBase() + '.md');
+  state.exported.md = true; save(); updateExportMarks();
+};
+$('btn-pdf').onclick = function(){
+  download(new Blob([toPdf(buildDoc())], {type:'application/pdf'}), fileBase() + '.pdf');
+  state.exported.pdf = true; save(); updateExportMarks();
+};
+$('btn-reset').onclick = function(){
+  var pending = !(state.exported.md && state.exported.pdf);
+  var text = (pending ? 'Aún no has descargado ' + (!state.exported.md && !state.exported.pdf ? 'ninguna de las dos versiones' : (state.exported.md ? 'el PDF' : 'el Markdown')) + '. ' : '') +
+    'Se borrará todo lo guardado en este navegador para ' + state.candidate + '. No se puede deshacer.';
+  askPin('Reiniciar', 'Confirma con el PIN para borrar la sesión.').then(function(ok){
+    if (!ok) return;
+    confirmBox('Reiniciar para el siguiente candidato', text, 'Borrar y reiniciar', true).then(function(yes){
+      if (!yes) return;
+      wipe();
+      $('c-preview').innerHTML = ''; $('tpl').innerHTML = ''; $('c-summary').innerHTML = ''; $('c-title').textContent = '';
+      $('main').classList.remove('collapsed'); $('btn-show').classList.add('hidden');
+      document.title = 'Hiring Day AAC · Fase 2';
+      show('wizard'); $('w-name').focus();
+    });
+  });
+};
+
+/* =========================================================
+   Documento de entrega (modelo común para MD, PDF y vista previa)
+   ========================================================= */
+function buildDoc(){
+  var created = new Date(state.createdAt), multi = state.workers.length > 1;
+  var blocks = [
+    { t:'h1', text: DOC_TITLE },
+    { t:'meta', text: 'Candidato: ' + state.candidate },
+    { t:'meta', text: 'Turno: ' + state.turno + ' · Fecha: ' + dmy(created) + ' · Inicio: ' + hhmm(created) + ' · Tiempo transcurrido: ' + mmss(elapsed()) }
+  ];
+  state.workers.forEach(function(w, wi){
+    var lvl = multi ? 'h3' : 'h2';
+    if (multi) blocks.push({ t:'h2', text:'Digital Worker ' + (wi+1) + (w.nombre.trim() ? ': ' + w.nombre.trim() : '') });
+    SECTIONS.forEach(function(s){
+      blocks.push({ t:lvl, text: s.n + '. ' + s.title });
+      if (s.type === 'nameobj'){
+        blocks.push({ t:'kv', label:'Nombre', text:w.nombre.trim() });
+        blocks.push({ t:'kv', label:'Objetivo', text:w.objetivo.trim() });
+      } else if (s.type === 'text'){
+        blocks.push({ t:'p', text:w[s.key].trim() });
+      } else if (s.type === 'list'){
+        var items = w.pasos.map(function(x){ return x.trim(); }).filter(Boolean);
+        blocks.push(items.length ? { t:'ol', items:items } : { t:'p', text:'' });
+      } else {
+        var rows = w[s.key].filter(function(r){ return s.cols.some(function(c){ return r[c.k].trim(); }); })
+          .map(function(r){ return s.cols.map(function(c){ return r[c.k].trim(); }); });
+        blocks.push(rows.length ? { t:'table', head:s.cols.map(function(c){ return c.h; }), rows:rows } : { t:'p', text:'' });
+      }
+    });
+  });
+  return blocks;
+}
+var EMPTY = '(sin completar)';
+
+function toMarkdown(blocks){
+  function cell(s){ return (s || '').replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>'); }
+  var out = [];
+  blocks.forEach(function(b){
+    switch (b.t){
+      case 'h1': out.push('# ' + b.text, ''); break;
+      case 'h2': out.push('## ' + b.text, ''); break;
+      case 'h3': out.push('### ' + b.text, ''); break;
+      case 'meta': out.push(b.text + '  '); break;
+      case 'kv': out.push('**' + b.label + ':** ' + (b.text ? b.text.replace(/\r?\n/g, '  \n') : '_' + EMPTY + '_'), ''); break;
+      case 'p': out.push(b.text ? b.text.replace(/\r?\n/g, '  \n') : '_' + EMPTY + '_', ''); break;
+      case 'ol': b.items.forEach(function(it, i){ out.push((i+1) + '. ' + it.replace(/\r?\n/g, '  \n   ')); }); out.push(''); break;
+      case 'table':
+        out.push('| ' + b.head.map(cell).join(' | ') + ' |');
+        out.push('|' + b.head.map(function(){ return ' --- '; }).join('|') + '|');
+        b.rows.forEach(function(r){ out.push('| ' + r.map(cell).join(' | ') + ' |'); });
+        out.push('');
+        break;
+    }
+    if (b.t === 'meta' && blocks[blocks.indexOf(b)+1] && blocks[blocks.indexOf(b)+1].t !== 'meta') out.push('');
+  });
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+function toHtml(blocks){
+  return blocks.map(function(b){
+    switch (b.t){
+      case 'h1': case 'h2': case 'h3': return '<' + b.t + '>' + esc(b.text) + '</' + b.t + '>';
+      case 'meta': return '<p class="meta">' + esc(b.text) + '</p>';
+      case 'kv': return '<p><strong>' + esc(b.label) + ':</strong> ' + (b.text ? esc(b.text) : '<span class="empty">' + EMPTY + '</span>') + '</p>';
+      case 'p': return b.text ? '<p>' + esc(b.text) + '</p>' : '<p class="empty">' + EMPTY + '</p>';
+      case 'ol': return '<ol>' + b.items.map(function(i){ return '<li style="white-space:pre-wrap">' + esc(i) + '</li>'; }).join('') + '</ol>';
+      case 'table': return '<table><tr>' + b.head.map(function(h){ return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>' +
+        b.rows.map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+    }
+    return '';
+  }).join('');
+}
+
+/* =========================================================
+   Generador de PDF mínimo (sin librerías externas)
+   Helvetica / Helvetica-Bold con codificación WinAnsi.
+   ========================================================= */
+var W_REG = [278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+var W_BOLD = [278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+var WIN = { 0x20AC:0x80, 0x201A:0x82, 0x201E:0x84, 0x2026:0x85, 0x2018:0x91, 0x2019:0x92, 0x201C:0x93, 0x201D:0x94, 0x2022:0x95, 0x2013:0x96, 0x2014:0x97, 0x2122:0x99 };
+var SPECIAL_W = { 0x80:556, 0x82:222, 0x84:333, 0x85:1000, 0x91:222, 0x92:222, 0x93:333, 0x94:333, 0x95:350, 0x96:556, 0x97:1000, 0x99:1000,
+  0xA1:333, 0xAA:370, 0xAB:556, 0xB0:400, 0xB7:278, 0xBA:365, 0xBB:556, 0xBF:611, 0xD7:584 };
+
+/* Convierte texto Unicode a una cadena de bytes WinAnsi (1 carácter = 1 byte) */
+function winAnsi(s){
+  var out = '';
+  s = String(s).replace(/\t/g, '    ').replace(/[→⇒]/g, '->').replace(/[←]/g, '<-').replace(/ /g, ' ').replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/\r\n?/g, '\n');
+  for (var i = 0; i < s.length; i++){
+    var c = s.charCodeAt(i);
+    if ((c >= 32 && c <= 126) || c === 10) out += s[i];
+    else if (c >= 0xA0 && c <= 0xFF) out += String.fromCharCode(c);
+    else if (WIN[c]) out += String.fromCharCode(WIN[c]);
+    else {
+      var base = s[i].normalize('NFD').replace(/[̀-ͯ]/g, '');
+      out += (base && base.charCodeAt(0) < 127 && base !== s[i]) ? base[0] : '?';
+    }
+  }
+  return out;
+}
+function charW(code, bold){
+  var t = bold ? W_BOLD : W_REG;
+  if (code >= 32 && code <= 126) return t[code - 32];
+  if (SPECIAL_W[code]) return SPECIAL_W[code];
+  if (code >= 0xC0){
+    var base = String.fromCharCode(code).normalize('NFD')[0].charCodeAt(0);
+    if (base >= 32 && base <= 126) return t[base - 32];
+  }
+  return 556;
+}
+function textW(bytes, size, bold){ var w = 0; for (var i = 0; i < bytes.length; i++) w += charW(bytes.charCodeAt(i), bold); return w * size / 1000; }
+
+/* Parte un texto (ya en WinAnsi) en líneas que caben en maxW */
+function wrap(bytes, size, bold, maxW){
+  var lines = [];
+  bytes.split(/\r?\n/).forEach(function(par){
+    if (par === ''){ lines.push(''); return; }
+    var words = par.split(/ +/), line = '';
+    words.forEach(function(word){
+      var cand = line ? line + ' ' + word : word;
+      if (textW(cand, size, bold) <= maxW){ line = cand; return; }
+      if (line) lines.push(line);
+      // palabra más larga que la línea: se corta por caracteres
+      while (textW(word, size, bold) > maxW){
+        var k = 1; while (k < word.length && textW(word.slice(0, k+1), size, bold) <= maxW) k++;
+        lines.push(word.slice(0, k)); word = word.slice(k);
+      }
+      line = word;
+    });
+    lines.push(line);
+  });
+  return lines;
+}
+function pdfStr(bytes){ return '(' + bytes.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)') + ')'; }
+
+function toPdf(blocks){
+  var PW = 595.28, PH = 841.89, ML = 56, MR = 56, MT = 64, MB = 60, CW = PW - ML - MR;
+  var pages = [], ops = null, y = 0;
+  function newPage(){ ops = []; pages.push(ops); y = PH - MT; }
+  function ensure(h){ if (y - h < MB) newPage(); }
+  function text(x, yy, bytes, size, bold, gray){
+    ops.push((gray != null ? gray + ' g ' : '') + 'BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x.toFixed(2) + ' ' + yy.toFixed(2) + ' Td ' + pdfStr(bytes) + ' Tj ET' + (gray != null ? ' 0 g' : ''));
+  }
+  function para(str, size, bold, opts){
+    opts = opts || {};
+    var x = ML + (opts.indent || 0), lead = size * 1.42, lines = wrap(winAnsi(str), size, bold, CW - (opts.indent || 0));
+    lines.forEach(function(l){ ensure(lead); y -= lead; text(x, y + lead*0.28, l, size, bold, opts.gray); });
+  }
+  newPage();
+  blocks.forEach(function(b, bi){
+    switch (b.t){
+      case 'h1':
+        para(b.text, 16, true); y -= 6; break;
+      case 'meta':
+        para(b.text, 9.5, false, { gray:0.3 });
+        if (blocks[bi+1] && blocks[bi+1].t !== 'meta'){ y -= 8; ops.push('0.8 G 0.6 w ' + ML + ' ' + y.toFixed(2) + ' m ' + (PW-MR) + ' ' + y.toFixed(2) + ' l S 0 G'); y -= 6; }
+        break;
+      case 'h2':
+        ensure(60); y -= 14; para(b.text, 13, true);
+        y -= 3; ops.push('0 G 1 w ' + ML + ' ' + y.toFixed(2) + ' m ' + (PW-MR) + ' ' + y.toFixed(2) + ' l S'); y -= 4;
+        break;
+      case 'h3':
+        ensure(48); y -= 10; para(b.text, 11.5, true); y -= 2; break;
+      case 'kv':
+        para(b.label, 9, true, { gray:0.35 });
+        para(b.text || EMPTY, 10.5, false, b.text ? {} : { gray:0.55 }); y -= 4; break;
+      case 'p':
+        para(b.text || EMPTY, 10.5, false, b.text ? {} : { gray:0.55 }); y -= 4; break;
+      case 'ol':
+        b.items.forEach(function(it, i){
+          var size = 10.5, lead = size*1.42, ind = 22;
+          var lines = wrap(winAnsi(it), size, false, CW - ind);
+          lines.forEach(function(l, li){
+            ensure(lead); y -= lead;
+            if (li === 0){ var num = winAnsi((i+1) + '.'); text(ML + ind - 6 - textW(num, size, true), y + lead*0.28, num, size, true); }
+            text(ML + ind, y + lead*0.28, l, size, false);
+          });
+          y -= 2;
+        });
+        y -= 4; break;
+      case 'table':
+        var n = b.head.length, size = 9.5, lead = size*1.38, padX = 5, padY = 4;
+        var colW = []; for (var c = 0; c < n; c++) colW.push(CW / n);
+        var drawRow = function(cells, bold, shade){
+          var wrapped = cells.map(function(cv, ci){ return wrap(winAnsi(cv), size, bold, colW[ci] - 2*padX); });
+          var h = Math.max.apply(null, wrapped.map(function(l){ return l.length; })) * lead + 2*padY;
+          if (y - h < MB){ newPage(); if (!bold) drawRow(b.head, true, true); }
+          var x = ML;
+          wrapped.forEach(function(lines, ci){
+            if (shade) ops.push('0.94 g ' + x.toFixed(2) + ' ' + (y-h).toFixed(2) + ' ' + colW[ci].toFixed(2) + ' ' + h.toFixed(2) + ' re f 0 g');
+            ops.push('0.75 G 0.5 w ' + x.toFixed(2) + ' ' + (y-h).toFixed(2) + ' ' + colW[ci].toFixed(2) + ' ' + h.toFixed(2) + ' re S 0 G');
+            lines.forEach(function(l, li){ text(x + padX, y - padY - (li+1)*lead + lead*0.28, l, size, bold); });
+            x += colW[ci];
+          });
+          y -= h;
+        };
+        ensure(lead*3 + 4*padY);
+        drawRow(b.head, true, true);
+        b.rows.forEach(function(r){ drawRow(r, false, false); });
+        y -= 10; break;
+    }
+  });
+
+  // Cabecera y pie en cada página
+  var header = winAnsi('Hiring Day AAC · Fase 2 — ' + state.candidate + ' · ' + state.turno);
+  pages.forEach(function(p, i){
+    p.unshift('BT /F1 8 Tf 0.5 g ' + ML + ' ' + (PH - 36).toFixed(2) + ' Td ' + pdfStr(header) + ' Tj ET 0 g');
+    var foot = winAnsi('Página ' + (i+1) + ' de ' + pages.length);
+    p.push('BT /F1 8 Tf 0.5 g ' + (PW - MR - textW(foot, 8, false)).toFixed(2) + ' 34 Td ' + pdfStr(foot) + ' Tj ET 0 g');
+  });
+
+  // Ensamblado del fichero
+  var objs = [];
+  function add(s){ objs.push(s); return objs.length; }
+  var catalog = add(''), pagesObj = add('');
+  var f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  var f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  var kids = [];
+  pages.forEach(function(p){
+    var stream = p.join('\n');
+    var content = add('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream');
+    kids.push(add('<< /Type /Page /Parent ' + pagesObj + ' 0 R /MediaBox [0 0 ' + PW + ' ' + PH + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >> >> /Contents ' + content + ' 0 R >>'));
+  });
+  objs[catalog-1] = '<< /Type /Catalog /Pages ' + pagesObj + ' 0 R >>';
+  objs[pagesObj-1] = '<< /Type /Pages /Kids [' + kids.map(function(k){ return k + ' 0 R'; }).join(' ') + '] /Count ' + kids.length + ' >>';
+  var title = DOC_TITLE + ' — ' + state.candidate, hex = 'FEFF';
+  for (var ti = 0; ti < title.length; ti++) hex += ('000' + title.charCodeAt(ti).toString(16).toUpperCase()).slice(-4);
+  var info = add('<< /Title <' + hex + '> /Producer (Hiring Day AAC Fase 2) >>');
+
+  var out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', offsets = [];
+  objs.forEach(function(o, i){ offsets.push(out.length); out += (i+1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  var xref = out.length;
+  out += 'xref\n0 ' + (objs.length+1) + '\n0000000000 65535 f \n';
+  offsets.forEach(function(off){ out += ('0000000000' + off).slice(-10) + ' 00000 n \n'; });
+  out += 'trailer\n<< /Size ' + (objs.length+1) + ' /Root ' + catalog + ' 0 R /Info ' + info + ' 0 R >>\nstartxref\n' + xref + '\n%%EOF\n';
+
+  var bytes = new Uint8Array(out.length);
+  for (var i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
+  return bytes;
+}
+
+/* Exposición mínima para pruebas automáticas locales */
+window.__fase2 = { buildDoc:buildDoc, toMarkdown:toMarkdown, toPdf:toPdf, getState:function(){ return state; } };
+
+/* =========================================================
+   Arranque: recupera la sesión si existe
+   ========================================================= */
+state = load();
+if (state && state.pinHash && state.workers){
+  state.exported = state.exported || {};
+  enterSession();
+} else {
+  state = null;
+  show('wizard');
+  $('w-name').focus();
+}
+})();
+</script>
+</body>
+</html>
